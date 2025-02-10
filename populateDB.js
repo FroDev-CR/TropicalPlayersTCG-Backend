@@ -1,6 +1,6 @@
-const axios = require('axios');
 const mongoose = require('mongoose');
-const Card = require('./models/Card'); // Asegúrate de que la ruta sea correcta
+const Set = require('./models/Set');
+const Card = require('./models/Card');
 
 const mongoURI = 'mongodb+srv://FroDev:Froder8562.@cluster0.oycsn.mongodb.net/<dbname>?retryWrites=true&w=majority';
 
@@ -11,25 +11,27 @@ mongoose.connect(mongoURI).then(() => {
   console.error('Error connecting to MongoDB:', error);
 });
 
-const populateDB = async () => {
+// Definir los sets que quieres añadir
+const sets = [
+  { name: 'S&V 151' },
+  { name: 'S&V Paradox-Rift' },
+  { name: 'S&V Shoulden Fable' },
+  // Puedes añadir más sets aquí
+];
+
+async function populateDB() {
   try {
-    const response = await axios.get('https://api.pokemontcg.io/v2/cards', {
-      headers: {
-        'X-Api-Key': '68faef15-2551-4e17-8078-48b765099401' // Tu clave de API
-      }
-    });
+    // Eliminar todos los sets y cartas existentes (opcional, solo si quieres empezar desde cero)
+    await Set.deleteMany({});
+    await Card.deleteMany({});
 
-    const cards = response.data.data.map(card => ({
-      name: card.name,
-      imageUrl: card.images.small,
-      price: Math.floor(Math.random() * 100), // Precio ficticio
-      seller: 'Fictitious Seller' // Vendedor ficticio
-    }));
+    // Insertar los nuevos sets
+    const insertedSets = await Set.insertMany(sets);
+    console.log('Sets inserted:', insertedSets);
 
-    await Card.insertMany(cards);
-    console.log('Database populated with Pokémon cards');
+    // Cerrar la conexión a MongoDB
     mongoose.connection.close();
   } catch (error) {
     console.error('Error populating database:', error);
   }
-};;
+}
